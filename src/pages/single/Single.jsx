@@ -1,59 +1,104 @@
 import "./single.scss";
 import Sidebar from "../../components/sidebar/Sidebar";
 import Navbar from "../../components/navbar/Navbar";
-import Chart from "../../components/chart/Chart";
-import List from "../../components/table/Table";
+import { useLocation } from "react-router-dom";
+import useFetch from "../../hooks/useFetch";
+import { useState } from "react";
+import axios from "axios";
 
-const Single = () => {
-  return (
-    <div className="single">
-      <Sidebar />
-      <div className="singleContainer">
-        <Navbar />
-        <div className="top">
-          <div className="left">
-            <div className="editButton">Edit</div>
-            <h1 className="title">Information</h1>
-            <div className="item">
-              <img
-                src="https://images.pexels.com/photos/733872/pexels-photo-733872.jpeg?auto=compress&cs=tinysrgb&dpr=3&h=750&w=1260"
-                alt=""
-                className="itemImg"
-              />
-              <div className="details">
-                <h1 className="itemTitle">Jane Doe</h1>
-                <div className="detailItem">
-                  <span className="itemKey">Email:</span>
-                  <span className="itemValue">janedoe@gmail.com</span>
-                </div>
-                <div className="detailItem">
-                  <span className="itemKey">Phone:</span>
-                  <span className="itemValue">+1 2345 67 89</span>
-                </div>
-                <div className="detailItem">
-                  <span className="itemKey">Address:</span>
-                  <span className="itemValue">
-                    Elton St. 234 Garden Yd. NewYork
-                  </span>
-                </div>
-                <div className="detailItem">
-                  <span className="itemKey">Country:</span>
-                  <span className="itemValue">USA</span>
-                </div>
-              </div>
-            </div>
-          </div>
-          <div className="right">
-            <Chart aspect={3 / 1} title="User Spending ( Last 6 Months)" />
-          </div>
-        </div>
-        <div className="bottom">
-        <h1 className="title">Last Transactions</h1>
-          <List/>
-        </div>
-      </div>
-    </div>
-  );
+const Single = ({ inputs }) => {
+	const location = useLocation();
+	const [edit, setEdit] = useState(false);
+	const path = location.pathname.split("/")[1];
+	const id = location.pathname.split("/")[2];
+	const { data, loading, error } = useFetch(`/${path}${path === "hotels" ? "/find" : ""}/${id}`);
+	const [dataUpdate, setDataUpdate] = useState({});
+	const handleClick = async e => {
+		if (edit) {
+			try {
+				axios.put(`/${path}/${data._id}`, { ...dataUpdate });
+			} catch (error) {}
+		}
+		setEdit(!edit);
+	};
+	const handleChange = e => {
+		setDataUpdate(prev => ({ ...prev, [e.target.id]: e.target.value }));
+	};
+	console.log(dataUpdate);
+	return (
+		<div className="single">
+			<Sidebar />
+			<div className="singleContainer">
+				<Navbar />
+				{loading ? (
+					"Loading..."
+				) : (
+					<div className="top">
+						<div className="left">
+							<div className="editButton" onClick={handleClick}>
+								{edit ? "Save" : "Edit"}
+							</div>
+							<div className="leftWrapper">
+								<h1 className="title">Information</h1>
+								<div className="item">
+									<img
+										src={
+											data.img ||
+											data.photos ||
+											"https://t4.ftcdn.net/jpg/04/55/10/71/360_F_455107170_36Is8hwPMPdg9fN78WaFiSwY57dkXBu3.jpg"
+										}
+										alt=""
+										className="itemImg"
+									/>
+									<div className="details">
+										{inputs.map((item, index) => {
+											return (
+												<div key={index} className="detailItem">
+													<span className="itemKey">{item}:</span>
+													<input
+														id={item}
+														className="itemValue"
+														placeholder={data[item]}
+														disabled={!edit}
+														onChange={e => handleChange(e)}
+													></input>
+												</div>
+											);
+										})}
+										{path !== "rooms" && (
+											<div className="detailItem">
+												<span className="itemKey">{path === "users" ? "is admin:" : "featured"}</span>
+												<select
+													id={path === "users" ? "isAdmin" : "featured"}
+													onChange={e => handleChange(e)}
+													className="itemValue"
+													style={{ width: 80, textAlign: "center" }}
+													disabled={!edit}
+												>
+													{path === "users" && (
+														<>
+															<option value={data.isAdmin ? "true" : "false"}>{data.isAdmin ? "Yes" : "No"}</option>
+															<option value={data.isAdmin ? "false" : "true"}>{data.isAdmin ? "No" : "Yes"}</option>
+														</>
+													)}
+													{path === "hotels" && (
+														<>
+															<option value={data.featured ? "true" : "false"}>{data.featured ? "Yes" : "No"}</option>
+															<option value={data.featured ? "false" : "true"}>{data.featured ? "No" : "Yes"}</option>
+														</>
+													)}
+												</select>
+											</div>
+										)}
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+				)}
+			</div>
+		</div>
+	);
 };
 
 export default Single;

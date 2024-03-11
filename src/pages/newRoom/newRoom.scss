@@ -1,4 +1,4 @@
-.new {
+.newRoom {
 	width: 100%;
 	display: flex;
 
@@ -32,12 +32,12 @@
 
 			.right {
 				flex: 2;
-
+				padding: 20px 200px;
 				form {
 					display: flex;
 					flex-wrap: wrap;
 					gap: 30px;
-					justify-content: space-between;
+					justify-content: center;
 
 					.formInput {
 						width: 40%;
